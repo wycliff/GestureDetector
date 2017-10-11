@@ -1,64 +1,124 @@
 package wycliffe.com.iknowyourtouch;
 
-import android.speech.tts.TextToSpeech;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.support.v4.view.GestureDetectorCompat;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener
-//        GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener
-{
-
+public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener, GestureDetector.OnGestureListener,
+        GestureDetector.OnDoubleTapListener {
 
     private TextToSpeech tts;
-    private Button btnSpeak;
     private TextView txtText;
-    private GestureDetector mGestureDetector;
+    private GestureDetectorCompat mDetector;
+    private static String DEBUG_TAG = "Gesture detector";
 
     // Strings
-    String response1 = "You have touched me";
+    String responseWhenTouched = "You have %s me";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         // I can call the onInit  in longpress
-
-        // Instamce of the text to speech.
+        // Instance of the text to speech.
         tts = new TextToSpeech(this, this);
-
-       // btnSpeak = (Button) findViewById(R.id.btnSpeak);
-
         txtText = (TextView) findViewById(R.id.txtText);
-
         // Bind the gestureDetector to GestureListener
-        mGestureDetector = new GestureDetector(this, new GestureListener());
+        mDetector = new GestureDetectorCompat(this, this);
+        mDetector.setOnDoubleTapListener(this);
+    }
 
-        // button on click event
-//        btnSpeak.setOnClickListener(new View.OnClickListener() {
-//
-//            @Override
-//            public void onClick(View arg0) {
-//                speakOut();
-//            }
-//
-//        });
+
+    private void outPut(String output) {
+        String formattedOutput = String.format(responseWhenTouched, output);
+        speakOut(formattedOutput);
+        writeOut(formattedOutput);
+    }
+
+    private void speakOut(String speakOut) {
+        tts.setSpeechRate(2);
+        tts.speak(speakOut, TextToSpeech.QUEUE_FLUSH, null);
+    }
+
+    private void writeOut(String textOut) {
+        txtText.setText(textOut);
+    }
+
+    @Override
+    public boolean onTouchEvent(MotionEvent event){
+        this.mDetector.onTouchEvent(event);
+        // Be sure to call the superclass implementation
+        return super.onTouchEvent(event);
+    }
+
+    @Override
+    public boolean onDown(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDown: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onFling(MotionEvent event1, MotionEvent event2,
+                           float velocityX, float velocityY) {
+        Log.d(DEBUG_TAG, "onFling: " + event1.toString() + event2.toString());
+        return true;
+    }
+
+    @Override
+    public void onLongPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onLongPress: " + event.toString());
+        outPut("long pressed");
+    }
+
+    @Override
+    public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX,
+                            float distanceY) {
+        Log.d(DEBUG_TAG, "onScroll: " + event1.toString() + event2.toString());
+        outPut("scrolled");
+        return true;
+    }
+
+    @Override
+    public void onShowPress(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onShowPress: " + event.toString());
+    }
+
+    @Override
+    public boolean onSingleTapUp(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onSingleTapUp: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTap(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDoubleTap: " + event.toString());
+        return true;
+    }
+
+    @Override
+    public boolean onDoubleTapEvent(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onDoubleTapEvent: " + event.toString());
+        outPut("double tapped");
+        return true;
+    }
+
+    @Override
+    public boolean onSingleTapConfirmed(MotionEvent event) {
+        Log.d(DEBUG_TAG, "onSingleTapConfirmed: " + event.toString());
+        outPut("single tapped");
+        return true;
     }
 
 
     @Override
     public void onDestroy() {
-        // Don't forget to shutdown tts!
         if (tts != null) {
             tts.stop();
             tts.shutdown();
@@ -66,122 +126,21 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
         super.onDestroy();
     }
 
-
+    //listens if TextToSpeech is initialized successfully
     @Override
     public void onInit(int status) {
-
         if (status == TextToSpeech.SUCCESS) {
-
             int result = tts.setLanguage(Locale.US); // setting the language
-
             if (result == TextToSpeech.LANG_MISSING_DATA
                     || result == TextToSpeech.LANG_NOT_SUPPORTED) {
                 Log.i("TTS", "This Language is not supported");
             } else {
-//                btnSpeak.setEnabled(true);
-                speakOut();
+                speakOut("Text to speech ready");
+                writeOut("Text to speech ready");
             }
-
         } else {
-            Log.e("TTS", "Initilization Failed!");
+            Log.e("TTS", "Initialization Failed!");
         }
 
     }
-
-
-    private void speakOut() {
-
-        //String text = txtText.getText().toString();
-        //tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-        //tts.setPitch(0.6);
-        tts.setSpeechRate(2);
-        tts.speak(response1, TextToSpeech.QUEUE_FLUSH, null);
-    }
-
-    private  void writeOut(){
-
-        // later we will have a condition for every
-        txtText.setText(response1);
-    }
-
-
-    // onTouch() method gets called each time you perform any touch event with screen
-    @Override
-    public boolean onTouchEvent(MotionEvent event)
-    {
-        //method onTouchEvent of GestureDetector class Analyzes the given motion event
-        //and if applicable triggers the appropriate callbacks on the GestureDetector.OnGestureListener supplied.
-        //Returns true if the GestureDetector.OnGestureListener consumed the event, else false.
-
-        boolean eventConsumed=mGestureDetector.onTouchEvent(event);
-        if (eventConsumed)
-        {
-//            Toast.makeText(this,GestureListener.currentGestureDetected, Toast.LENGTH_LONG).show();
-            speakOut();
-
-            writeOut();
-            return true;
-        }
-        else
-            return false;
-    }
-
-//
-//    public boolean onDoubleTapper(MotionEvent event){
-//        boolean eventConsumed=mGestureDetector.setOnDoubleTapListener(event);
-//        if (eventConsumed)
-//        {
-////            Toast.makeText(this,GestureListener.currentGestureDetected, Toast.LENGTH_LONG).show();
-//            speakOut();
-//            return true;
-//        }
-//        else
-//            return false;
-//    }
-
-}//end Class
-
-//    @Override
-//    public boolean onSingleTapConfirmed(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onDoubleTap(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onDoubleTapEvent(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onDown(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public void onShowPress(MotionEvent e) {
-//
-//    }
-//
-//    @Override
-//    public boolean onSingleTapUp(MotionEvent e) {
-//        return false;
-//    }
-//
-//    @Override
-//    public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
-//        return false;
-//    }
-//
-//    @Override
-//    public void onLongPress(MotionEvent e) {
-//
-//    }
-//
-//    @Override
-//    public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
-//        return false;
-
+}

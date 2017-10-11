@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">IKnowYourTouch</string>
+    <string name="hint_available_actions">
+        I can know when you:\n
+        1. Tap me once\n
+        2. Double tap me\n
+        3. Scroll, and\n
+        4. Long press me
+    </string>
 </resources>
